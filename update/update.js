@@ -7,6 +7,8 @@ const url = require('../url')
 let mcl = mongodb.MongoClient
 //create router instance
 let router = express.Router()
+//database name
+let dbName = 'miniproject'
 //create restapi
 router.post("/", (req, res) => {
     let p_id = req.body.p_id
@@ -19,7 +21,7 @@ router.post("/", (req, res) => {
         if (err)
             console.log('Error in connection:- ', err)
         else {
-            let db = conn.db("nodedb")
+            let db = conn.db(dbName)
             db.collection('products').updateOne({ p_id }, { $set: obj }, (err, result) => {
                 if (err)
                     res.json({ 'update': 'Error ' + err })
@@ -38,8 +40,75 @@ router.post("/", (req, res) => {
     })
 })
 
+//Update product in cart
+router.post("/updateCart", (req, res) => {
+    let p_id = req.body.p_id
+    let uname = req.body.uname
+    let obj = { "qty": req.body.qty }
+    //connect to mongodb
+    mcl.connect(url, (err, conn) => {
+        if (err)
+            console.log('Error in connection:- ', err)
+        else {
+            let db = conn.db(dbName)
+            db.collection('cart').updateOne({ p_id, uname }, { $set: obj },
+                (err, result) => {
+                    if (err)
+                        res.json({ 'cartUpdate': 'Error ' + err })
+                    else {
+                        if (result.matchedCount != 0) {
+                            console.log(`Cart data for ${uname} updated`)
+                            res.json({ 'cartUpdate': 'success' })
+                        }
+                        else {
+                            console.log(`Record not updated`)
+                            res.json({ 'cartUpdate': 'Record Not found' })
+                        }
+                        conn.close()
+                    }
+                })
+        }
+    })
+})
 
+//Update user
+router.post("/updateUser", (req, res) => {
 
+    let obj = {
+        
+        "upwd": req.body.upwd,
+        "email": req.body.email,
+        "address": req.body.address,
+        "contact": req.body.contact
+    }
+    
+    //connect to mongodb
+    mcl.connect(url, (err, conn) => {
+        if (err)
+            console.log('Error in connection:- ', err)
+        else {
+            let db = conn.db(dbName)
+            db.collection('user').updateOne({ obj }, { $set: obj },
+                (err, result) => {
+                    if (err)
+                        res.json({ 'userUpdate': 'Error ' + err })
+                    else {
+                        if (result.matchedCount != 0) {
+                            console.log(`user data for ${obj} updated`)
+                            res.json({ 'userUpdate': 'success' })
+                        }
+                        else {
+                            console.log(`Record not updated`)
+                            res.json({ 'userUpdate': 'Record Not found' })
+                        }
+                        conn.close()
+                    }
+                })
+        }
+    })
+})
 
+//Update user
+//to be done by participants
 //export router
 module.exports = router
